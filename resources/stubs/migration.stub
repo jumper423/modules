@@ -1,16 +1,15 @@
 <?php
 
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
 
-class {{classname}} extends Migration
+class {{classname}} extends \PragmaRX\Support\Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function migrateUp()
     {
         //
     }
@@ -20,7 +19,7 @@ class {{classname}} extends Migration
      *
      * @return void
      */
-    public function down()
+    public function migrateDown()
     {
         //
     }
