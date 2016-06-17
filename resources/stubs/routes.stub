@@ -11,7 +11,7 @@
 |
 */
 
-Route::group(['prefix' => '{{slug}}'], function() {
+Route::group(['prefix' => '{{slug}}', 'module' => '{{name}}', "middleware" => ["jwt.auth"]], function() {
 	Route::get('/', function() {
 		dd('This is the {{name}} module index page.');
 	});
