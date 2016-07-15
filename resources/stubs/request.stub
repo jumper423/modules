@@ -2,19 +2,10 @@
 
 namespace {{path}}\{{namespace}};
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Modules\Base\Http\Requests\BaseRequest;
 
-class {{classname}} extends Request
+class {{classname}} extends BaseRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
-    {
-        return false;
-    }
 
     /**
      * Get the validation rules that apply to the request.
