@@ -60,9 +60,7 @@ class ModuleMigrateRollbackCommand extends Command
         if ($slug) {
             return $this->rollback($slug);
         } else {
-            foreach ($this->module->all() as $module) {
-                $this->rollback($module['slug']);
-            }
+            return $this->rollback();
         }
     }
 
@@ -73,7 +71,7 @@ class ModuleMigrateRollbackCommand extends Command
      *
      * @return mixed
      */
-    protected function rollback($slug)
+    protected function rollback($slug = null)
     {
         $this->requireMigrations($slug);
 
