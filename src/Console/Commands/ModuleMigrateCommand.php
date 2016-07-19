@@ -73,15 +73,7 @@ class ModuleMigrateCommand extends Command
                 return $this->error('Nothing to migrate.');
             }
         } else {
-            if ($this->option('force')) {
-                $modules = $this->module->all();
-            } else {
-                $modules = $this->module->enabled();
-            }
-
-            foreach ($modules as $module) {
-                $this->migrate($module['slug']);
-            }
+            return $this->migrate();
         }
     }
 
@@ -92,10 +84,10 @@ class ModuleMigrateCommand extends Command
      *
      * @return mixed
      */
-    protected function migrate($slug)
+    protected function migrate($slug = null)
     {
-        if ($this->module->exists($slug)) {
-            $pretend = Arr::get($this->option(), 'pretend', false);
+        $pretend = Arr::get($this->option(), 'pretend', false);
+        if (!is_null($slug) && $this->module->exists($slug)) {
             $path = $this->getMigrationPath($slug);
 
             if (floatval(App::version()) > 5.1) {
@@ -120,7 +112,42 @@ class ModuleMigrateCommand extends Command
                 $this->call('module:seed', ['module' => $slug, '--force' => true]);
             }
         } else {
-            return $this->error('Module does not exist.');
+            $modules = $this->module->all();
+            if (count($modules) == 0) {
+                return $this->error("Your application doesn't have any modules.");
+            }
+            $migrationsAll = [];
+            foreach ($modules as $module) {
+                $path = $this->getMigrationPath($module['slug']);
+                $files = $this->migrator->getMigrationFiles($path);
+                $ran = $this->migrator->getRepository()->getRan();
+                $migrations = array_diff($files, $ran);
+                $this->migrator->requireFiles($path, $migrations);
+                $migrationsAll = array_merge($migrationsAll, $migrations);
+            }
+            if (floatval(App::version()) > 5.1) {
+                $pretend = ['pretend' => $pretend];
+            }
+            sort($migrationsAll);
+            $this->migrator->runMigrationList($migrationsAll, $pretend);
+
+            // Once the migrator has run we will grab the note output and send it out to
+            // the console screen, since the migrator itself functions without having
+            // any instances of the OutputInterface contract passed into the class.
+            foreach ($this->migrator->getNotes() as $note) {
+                if (!$this->option('quiet')) {
+                    $this->line($note);
+                }
+            }
+
+            // Finally, if the "seed" option has been given, we will re-run the database
+            // seed task to re-populate the database, which is convenient when adding
+            // a migration and a seed at the same time, as it is only this command.
+            if ($this->option('seed')) {
+                foreach ($modules as $module) {
+                    $this->call('module:seed', ['module' => $module['slug'], '--force' => true]);
+                }
+            }
         }
     }
 
