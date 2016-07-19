@@ -9,14 +9,32 @@ trait MigrationTrait
      *
      * @param string $module
      */
-    protected function requireMigrations($module)
+    protected function requireMigrations($module = null)
     {
-        $path = $this->getMigrationPath($module);
+        if (is_null($module)) {
+            $modules = $this->module->all();
+            if (count($modules) == 0) {
+                return $this->error("Your application doesn't have any modules.");
+            }
+            $migrationsAll = [];
+            foreach ($modules as $module) {
+                $path = $this->getMigrationPath($module['slug']);
+                $migrations = $this->laravel['files']->glob($path . '*_*.php');
+                $migrationsAll = array_merge($migrationsAll, $migrations);
+            }
+            sort($migrationsAll);
 
-        $migrations = $this->laravel['files']->glob($path.'*_*.php');
+            foreach ($migrationsAll as $migration) {
+                $this->laravel['files']->requireOnce($migration);
+            }
+        } else {
+            $path = $this->getMigrationPath($module);
 
-        foreach ($migrations as $migration) {
-            $this->laravel['files']->requireOnce($migration);
+            $migrations = $this->laravel['files']->glob($path . '*_*.php');
+
+            foreach ($migrations as $migration) {
+                $this->laravel['files']->requireOnce($migration);
+            }
         }
     }
 
